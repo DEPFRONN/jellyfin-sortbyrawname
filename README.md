@@ -13,7 +13,7 @@ Jellyfin 12.2용으로 빌드했습니다. 서버가 12.2.0 이상이어야 로�
 
    `https://raw.githubusercontent.com/DEPFRONN/jellyfin-sortbyrawname/main/manifest.json`
 
-3. 카탈로그에서 SortByRawName 1.0.1.0을 설치합니다. 1.0.0.0을 이미 넣었다면 서버를 끄고 `plugins/SortByRawName_1.0.0.0` 폴더를 지운 뒤 다시 설치합니다.
+3. 카탈로그에서 SortByRawName 1.0.2.0을 설치합니다. 그다음 젤리핀을 재시작하고, 예약 작업 **원문 제목으로 정렬 다시 적용**이 끝날 때까지 기다립니다.
 4. 젤리핀을 재시작합니다.
 5. 대시보드의 예약 작업에서 **원문 제목으로 정렬 다시 적용**이 끝날 때까지 기다린 뒤, 작품 목록을 새로고침합니다.
 

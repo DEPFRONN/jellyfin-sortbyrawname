@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using System.Reflection;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Configuration;
 using SortByRawName;
@@ -64,7 +66,42 @@ public class SortOrderTests
         var info = plugin.GetPluginInfo();
 
         Assert.Equal(Plugin.PluginId, info.Id);
-        Assert.Equal("1.0.1.0", info.Version.ToString());
+        Assert.Equal("1.0.2.0", info.Version.ToString());
         Assert.Equal("SortByRawName", info.Name);
+    }
+
+    [Fact]
+    public void Disable_replaces_a_transliterator_that_was_already_created()
+    {
+        var type = Type.GetType("Jellyfin.Extensions.StringExtensions, Jellyfin.Extensions");
+        Assert.NotNull(type);
+        var field = type.GetField("_transliterator", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(field);
+
+        var valueType = field.FieldType.GetGenericArguments()[0];
+        var getInstance = valueType.GetMethod("GetInstance", [typeof(string)]);
+        Assert.NotNull(getInstance);
+        var latin = getInstance.Invoke(null, ["Any-Latin; Latin-Ascii; Lower;"]);
+        var factoryType = typeof(Func<>).MakeGenericType(valueType);
+        var factory = Expression.Lambda(factoryType, Expression.Constant(latin, valueType)).Compile();
+        var setter = new System.Reflection.Emit.DynamicMethod(
+            "SetTestTransliterator",
+            typeof(void),
+            [field.FieldType],
+            type,
+            skipVisibility: true);
+        var il = setter.GetILGenerator();
+        il.Emit(System.Reflection.Emit.OpCodes.Ldarg_0);
+        il.Emit(System.Reflection.Emit.OpCodes.Stsfld, field);
+        il.Emit(System.Reflection.Emit.OpCodes.Ret);
+        setter.Invoke(null, [Activator.CreateInstance(field.FieldType, factory)]);
+
+        var romanized = BaseItem.GetSortName("아바타", true, _configuration);
+        Assert.DoesNotContain("아", romanized);
+
+        TransliteratorDisabler.Disable();
+
+        var raw = BaseItem.GetSortName("아바타", true, _configuration);
+        Assert.Contains("아", raw);
     }
 }

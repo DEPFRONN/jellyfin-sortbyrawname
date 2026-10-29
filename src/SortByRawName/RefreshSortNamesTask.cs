@@ -69,7 +69,7 @@ public class RefreshSortNamesTask : IScheduledTask
             }
 
             progress.Report(0);
-            var updates = CollectUpdates(cancellationToken);
+            var updates = await CollectUpdatesAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("정렬 제목을 바꿀 항목 {Count}개를 찾았습니다.", updates.Count);
             progress.Report(30);
 
@@ -95,55 +95,60 @@ public class RefreshSortNamesTask : IScheduledTask
         }
     }
 
-    private List<(Guid Id, string? SortName)> CollectUpdates(CancellationToken cancellationToken)
+    private async Task<List<(Guid Id, string? SortName)>> CollectUpdatesAsync(CancellationToken cancellationToken)
     {
-        var root = _libraryManager.GetUserRootFolder();
-        var seen = new HashSet<Guid>();
+        var configuration = BaseItem.ConfigurationManager?.Configuration ?? new ServerConfiguration();
+        var personType = typeof(Person).ToString();
         var updates = new List<(Guid Id, string? SortName)>();
         var samplesLogged = 0;
 
-        foreach (var library in root.Children)
+        await using var read = await _dbFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rows = await read.BaseItems
+            .AsNoTracking()
+            .Select(entity => new { entity.Id, entity.Name, entity.Type, entity.SortName })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var row in rows)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            Consider(library);
-
-            var children = _libraryManager.GetItemList(new InternalItemsQuery
+            if (row.Id.Equals(Guid.Empty) || string.IsNullOrEmpty(row.Name))
             {
-                ParentId = library.Id,
-                Recursive = true
-            });
+                continue;
+            }
 
-            foreach (var child in children)
+            var alphanumeric = !string.Equals(row.Type, personType, StringComparison.Ordinal);
+            var rebuilt = BaseItem.GetSortName(row.Name, alphanumeric, configuration);
+            if (string.Equals(row.SortName, rebuilt, StringComparison.Ordinal))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                Consider(child);
+                continue;
+            }
+
+            updates.Add((row.Id, rebuilt));
+            Remember(row.Id, rebuilt);
+            if (samplesLogged < 8)
+            {
+                samplesLogged++;
+                _logger.LogInformation("정렬 제목 변경: '{Name}' [{Previous}] -> [{Rebuilt}]", row.Name, row.SortName, rebuilt);
             }
         }
 
         return updates;
+    }
 
-        void Consider(BaseItem item)
+    private void Remember(Guid id, string? sortName)
+    {
+        try
         {
-            if (!seen.Add(item.Id) || item.Id.Equals(Guid.Empty))
+            var cached = _libraryManager.GetItemById(id);
+            if (cached is not null)
             {
-                return;
+                cached.SortName = sortName;
             }
-
-            var cached = _libraryManager.GetItemById(item.Id) ?? item;
-            var previous = cached.SortName;
-            cached.SortName = null!;
-            var rebuilt = cached.SortName;
-            if (string.Equals(previous, rebuilt, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            updates.Add((cached.Id, rebuilt));
-            if (samplesLogged < 8)
-            {
-                samplesLogged++;
-                _logger.LogInformation("정렬 제목 변경: '{Name}' [{Previous}] -> [{Rebuilt}]", cached.Name, previous, rebuilt);
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "메모리에 있는 항목 {Id}의 정렬 제목은 나중에 데이터베이스 값으로 맞춰집니다.", id);
         }
     }
 
