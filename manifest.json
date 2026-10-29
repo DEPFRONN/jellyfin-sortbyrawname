@@ -8,12 +8,12 @@
     "category": "General",
     "versions": [
       {
-        "version": "1.0.0.0",
-        "changelog": "Jellyfin 12.2에서 한글 제목을 원문 기준 숫자, 영어, 가나다 순으로 정렬합니다.",
+        "version": "1.0.1.0",
+        "changelog": "플러그인 목록 화면이 열리지 않던 문제를 고쳤습니다. 한글 제목은 로마자로 바꾸지 않고 숫자, 영어, 가나다 순으로 정렬합니다.",
         "targetAbi": "12.2.0.0",
-        "sourceUrl": "https://github.com/DEPFRONN/jellyfin-sortbyrawname/releases/download/v1.0.0.0/SortByRawName_1.0.0.0.zip",
-        "checksum": "0dec4dd2e2e2f395b865b51c4d0dbbde",
-        "timestamp": "2026-10-29T09:45:00Z"
+        "sourceUrl": "https://github.com/DEPFRONN/jellyfin-sortbyrawname/releases/download/v1.0.1.0/SortByRawName_1.0.1.0.zip",
+        "checksum": "245afa761cb562ad8a303b0b6d51553b",
+        "timestamp": "2026-10-29T10:05:00Z"
       }
     ]
   }

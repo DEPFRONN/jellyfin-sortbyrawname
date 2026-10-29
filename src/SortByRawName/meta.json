@@ -1,6 +1,6 @@
 {
   "category": "General",
-  "changelog": "Jellyfin 12.2에서 한글 제목을 로마자로 바꾸지 않고 숫자, 영어, 가나다 순으로 정렬합니다.",
+  "changelog": "플러그인 목록 화면이 열리지 않던 문제를 고쳤습니다. 한글 제목은 로마자로 바꾸지 않고 숫자, 영어, 가나다 순으로 정렬합니다.",
   "description": "작품 제목을 로마자로 옮기지 않고 원문 그대로 정렬합니다.",
   "guid": "6f4c2b8a-1d57-4e3a-9c84-0b7e5a2d6f19",
   "name": "SortByRawName",
@@ -8,7 +8,7 @@
   "owner": "local",
   "targetAbi": "12.2.0.0",
   "timestamp": "2026-10-29T09:00:00Z",
-  "version": "1.0.0.0",
+  "version": "1.0.1.0",
   "status": "Active",
   "autoUpdate": true
 }

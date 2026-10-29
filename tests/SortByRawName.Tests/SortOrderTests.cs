@@ -55,4 +55,16 @@ public class SortOrderTests
 
         Assert.Equal("matrix", sortName);
     }
+
+    [Fact]
+    public void Plugin_info_can_be_read_after_construction()
+    {
+        var plugin = new Plugin();
+
+        var info = plugin.GetPluginInfo();
+
+        Assert.Equal(Plugin.PluginId, info.Id);
+        Assert.Equal("1.0.1.0", info.Version.ToString());
+        Assert.Equal("SortByRawName", info.Name);
+    }
 }
